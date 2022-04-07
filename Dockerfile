@@ -14,7 +14,15 @@ ADD http://exist-db.org/exist/apps/public-repo/public/expath-crypto-exist-lib-0.
 COPY build/*.xar ${autodeploy}
 
 # OPTIONAL: Copy custom conf.xml to WEB-INF.
+# Removed this because some of the configuration settings were causing errors during deployment.
 # COPY conf/conf.xml /exist/etc
+
+# OPTIONAL: Copy custom controller-config.xml to WEB-INF. This sets the root app to srophe.
+COPY conf/controller-config.xml /exist/etc/webapp/WEB-INF/
+
+# OPTIONAL: Copy custom jetty config to set context to '/'
+# See: https://exist-open.markmail.org/message/gjp2po2ducmckvix?q=set+app+as+root+order:date-backward
+COPY conf/exist-webapp-context.xml /exist/etc/jetty/webapps/
 
 EXPOSE 8080 8443
 
