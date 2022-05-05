@@ -1,5 +1,5 @@
 # Specify the eXist-db image with preloaded data app as a base image
-FROM biblia-arabica/biblia-arabica-data:v0.37
+FROM ghcr.io/biblia-arabica/biblia-arabica-data:latest
 
 # Exist autodeploy directory
 ENV autodeploy=/exist/autodeploy/
