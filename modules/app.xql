@@ -79,7 +79,7 @@ declare %templates:wrap function app:record-title($node as node(), $model as map
  : Add additional metadata tags here 
 :)
 declare function app:metadata($node as node(), $model as map(*)) {
-    if(request:get-parameter('id', '')) then 
+    if(request:get-parameter('id', '')) then
     (
     (: some rdf examples
     <link type="application/rdf+xml" href="id.rdf" rel="alternate"/>
@@ -87,10 +87,26 @@ declare function app:metadata($node as node(), $model as map(*)) {
     <link type="text/plain" href="id.nt" rel="alternate"/>
     <link type="application/json+ld" href="id.jsonld" rel="alternate"/>
     :)
-    <meta name="DC.title " property="dc.title " content="{$model("hits")/ancestor::tei:TEI/descendant::tei:title[1]/text()}"/>,
-    if($model("hits")/ancestor::tei:TEI/descendant::tei:desc or $model("hits")/ancestor::tei:TEI/descendant::tei:note[@type="abstract"]) then 
-        <meta name="DC.description " property="dc.description " content="{$model("hits")/ancestor::tei:TEI/descendant::tei:desc[1]/text() | $model("hits")/ancestor::tei:TEI/descendant::tei:note[@type="abstract"]}"/>
-    else (),
+    (: $model("hits") is already the tei:TEI root node here, not a descendant of it, so
+       ancestor::tei:TEI (which excludes self) always matched nothing below - silently emptying
+       DC.title and DC.description on every record. Original lines kept as a record, replaced
+       with the descendant::-only form used everywhere else in this file. :)
+    (:<meta name="DC.title " property="dc.title " content="{$model("hits")/ancestor::tei:TEI/descendant::tei:title[1]/text()}"/>,:)
+    <meta name="DC.title " property="dc.title " content="{$model("hits")/descendant::tei:title[1]/text()}"/>,
+    (: Also updated to prefer the publisher-provided abstract (note[@type="abstract"]) and fall
+       back to the old Zotero abstract field, renamed to note[@type="usage-note"], when no
+       publisher-abstract has been entered yet - otherwise most records would lose their
+       description entirely. Original lines kept as a record below. :)
+    (:if($model("hits")/ancestor::tei:TEI/descendant::tei:desc or $model("hits")/ancestor::tei:TEI/descendant::tei:note[@type="abstract"]) then :)
+    (:    <meta name="DC.description " property="dc.description " content="{$model("hits")/ancestor::tei:TEI/descendant::tei:desc[1]/text() | $model("hits")/ancestor::tei:TEI/descendant::tei:note[@type="abstract"]}"/>:)
+    (:else (),:)
+    let $description-notes :=
+        let $abstract-notes := $model("hits")/descendant::tei:note[@type="abstract"]
+        return if ($abstract-notes) then $abstract-notes else $model("hits")/descendant::tei:note[@type="usage-note"]
+    return
+        if($model("hits")/descendant::tei:desc or $description-notes) then
+            <meta name="DC.description " property="dc.description " content="{$model("hits")/descendant::tei:desc[1]/text() | $description-notes}"/>
+        else (),
     <link xmlns="http://www.w3.org/1999/xhtml" type="text/html" href="{request:get-parameter('id', '')}.html" rel="alternate"/>,
     <link xmlns="http://www.w3.org/1999/xhtml" type="text/xml" href="{request:get-parameter('id', '')}/tei" rel="alternate"/>,
     <link xmlns="http://www.w3.org/1999/xhtml" type="application/atom+xml" href="{request:get-parameter('id', '')}/atom" rel="alternate"/>
