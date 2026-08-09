@@ -462,9 +462,22 @@
                         <xsl:apply-templates select="//t:note[@type='abstract']"/>
                     </div>
                 </xsl:if>
+                <!-- Added: note[@type='usage-note'] now holds the original Zotero "Abstract" field
+                     content (renamed from note[@type='abstract']); note[@type='abstract'] is reserved
+                     for the new publisher-provided abstract entered via Zotero's Extra field
+                     ("publisher-abstract: ..."). Gets its own "Note" heading here, same treatment as
+                     the Abstract block above, and is excluded from "Full Citation Information" below
+                     so it isn't duplicated as a bare, unlabeled note. -->
+                <xsl:if test="//t:note[@type='usage-note']">
+                    <h3>Note</h3>
+                    <div class="section indent">
+                        <xsl:apply-templates select="//t:note[@type='usage-note']"/>
+                    </div>
+                </xsl:if>
                 <h3>Full Citation Information</h3>
                 <div class="section indent">
-                    <xsl:apply-templates select="*[not(self::t:note[@type= ('tag','abstract')]) and not(self::t:citedRange)]" mode="full"/>
+                    <!-- 'usage-note' added to the exclusion list alongside 'tag' and 'abstract' (see comment above) -->
+                    <xsl:apply-templates select="*[not(self::t:note[@type= ('tag','abstract','usage-note')]) and not(self::t:citedRange)]" mode="full"/>
                 </div>
                 <xsl:if test="descendant-or-self::t:idno[@type='URI'][contains(.,'https://www.zotero.org')]">
                     <a href="{descendant-or-self::t:idno[@type='URI'][contains(.,'https://www.zotero.org')][1]}" class="btn btn-info see-also" data-toggle="tooltip" title="View Zotero entry">
